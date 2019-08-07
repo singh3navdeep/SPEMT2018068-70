@@ -1,0 +1,34 @@
+version: '2.1'
+volumes:
+    mysql-log:
+      driver: local
+    mysql-conf:
+      driver: local
+services:
+    node:
+          build: ./
+          env_file:
+            - ./.env
+          ports:
+            - "${WEB_PORT}:${WEB_PORT}"
+          depends_on:
+            db:
+              condition: service_healthy
+                
+          
+    db:
+          build: ./databaseQueries
+          ports:
+            - "3306:3306"
+          volumes:
+            - "mysql-log:/var/log/mysql"
+            - "mysql-conf:/etc/mysql/conf.d"
+          restart: unless-stopped
+          command: mysqld --general-log=1 --general-log-file=/var/log/mysql/general-log.log
+          env_file:
+          - ./.env
+          # environment:
+          #   MYSQL_USER: root
+          #   MYSQL_PASSWORD: NIme&1212
+          healthcheck:
+            test: mysqladmin ping -h 127.0.0.1 -u root --password=$$MYSQL_PASSWORD
